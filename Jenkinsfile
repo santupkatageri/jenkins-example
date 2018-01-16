@@ -1,23 +1,18 @@
 pipeline {
-    agent any
+node {
+  ws("workspace/${env.JOB_NAME}/${env.BRANCH_NAME}".replace('%2F', '_')) {
+    // Mark the code checkout 'stage'....
+    stage 'Checkout'
+    checkout scm
 
-    stages {
-        stage ('Compile Stage') {
+    // Mark the code build 'stage'....
+    stage 'Build'
 
-            steps {
-                withMaven(maven : 'maven_3_5_0') {
-                    sh 'mvn clean compile'
-                }
-            }
-        }
+    def mvnHome = tool 'maven'
 
-        stage ('Testing Stage') {
-
-            steps {
-                withMaven(maven : 'maven_3_5_0') {
-                    sh 'mvn test'
-                }
-            }
-        }
-    }
+    sh "${mvnHome}/bin/mvn clean verify -B"
+    
+    junit testResults: '**/surefire-reports/*.xml'
+  }
+}
 }
