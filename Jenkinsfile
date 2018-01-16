@@ -1,20 +1,28 @@
 pipeline {
     agent any
+    tools {
+        maven 'maven'
+        jdk 'java'
+    }
     stages {
-        stage ('Compile Stage') {
-
+        stage ('Initialize') {
             steps {
-                def mvnHome = tool 'maven'
-                sh "${mvnHome}/bin/mvn clean compile"
-                }
+                sh '''
+                    echo "PATH = ${PATH}"
+                    echo "M2_HOME = ${M2_HOME}"
+                '''
             }
+        }
 
-        stage ('Testing Stage') {
-
+        stage ('Build') {
             steps {
-                def mvnHome = tool 'maven'
-                sh "${mvnHome}/bin/mvn test"
+                sh 'mvn -Dmaven.test.failure.ignore=true install' 
+            }
+            post {
+                success {
+                    junit 'target/surefire-reports/**/*.xml' 
                 }
             }
         }
- }
+    }
+}
